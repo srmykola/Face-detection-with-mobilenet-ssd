@@ -8,7 +8,7 @@ from keras import backend as K
 from tensorflow.keras import utils
 from tensorflow.keras.models import *
 from tensorflow.keras.layers import *
-from tensorflow.keras.layers.core import *
+# from tensorflow.keras.layers.core import *
 from tensorflow.keras.layers.advanced_activations import *
 from tensorflow.keras.layers.pooling import *
 from tensorflow.keras.activations import *
