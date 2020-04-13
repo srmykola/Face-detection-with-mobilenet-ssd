@@ -5,25 +5,25 @@ import warnings
 
 from keras_layer_AnchorBoxes import AnchorBoxes
 from keras import backend as K
-from tensorflow.keras import utils
-from tensorflow.keras.models import *
-from tensorflow.keras.layers import *
-# from tensorflow.keras.layers.core import *
-from tensorflow.keras.layers.advanced_activations import *
-from tensorflow.keras.layers.pooling import *
-from tensorflow.keras.activations import *
-from tensorflow.keras.layers.convolutional import *
-from tensorflow.keras.regularizers import *
-from tensorflow.keras.layers.normalization import *
-from tensorflow.keras.optimizers import *
-from tensorflow.keras.constraints import *
-from tensorflow.keras.layers.noise import *
+from keras import utils
+from keras.models import *
+from keras.layers import *
+from keras.layers.core import *
+from keras.layers.advanced_activations import *
+from keras.layers.pooling import *
+from keras.activations import *
+from keras.layers.convolutional import *
+from keras.regularizers import *
+from keras.layers.normalization import *
+from keras.optimizers import *
+from keras.constraints import *
+from keras.layers.noise import *
 
 import tensorflow as tf
 
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Input, Lambda, Conv2D, MaxPooling2D
-from tensorflow.keras.layers import BatchNormalization, ELU, Reshape, Concatenate, Activation
+from keras.models import Model
+from keras.layers import Input, Lambda, Conv2D, MaxPooling2D
+from keras.layers import BatchNormalization, ELU, Reshape, Concatenate, Activation
 
 from keras_layer_L2Normalization import L2Normalization
 
