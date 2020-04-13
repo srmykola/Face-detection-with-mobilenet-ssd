@@ -5,7 +5,7 @@ import warnings
 
 from keras_layer_AnchorBoxes import AnchorBoxes
 from keras import backend as K
-from tensorflow.keras.utils import np_utils
+from tensorflow.keras import utils
 from tensorflow.keras.models import *
 from tensorflow.keras.layers import *
 from tensorflow.keras.layers.core import *
