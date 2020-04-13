@@ -5,29 +5,32 @@ import warnings
 
 from keras_layer_AnchorBoxes import AnchorBoxes
 from keras import backend as K
-from keras.utils import np_utils
-from keras.models import *
-from keras.layers import *
-from keras.layers.core import *
-from keras.layers.advanced_activations import *
-from keras.layers.pooling import *
-from keras.activations import *
-from keras.layers.convolutional import *
-from keras.regularizers import *
-from keras.layers.normalization import *
-from keras.optimizers import *
-from keras.constraints import *
-from keras.layers.noise import *
+from tensorflow.keras.utils import np_utils
+from tensorflow.keras.models import *
+from tensorflow.keras.layers import *
+from tensorflow.keras.layers.core import *
+from tensorflow.keras.layers.advanced_activations import *
+from tensorflow.keras.layers.pooling import *
+from tensorflow.keras.activations import *
+from tensorflow.keras.layers.convolutional import *
+from tensorflow.keras.regularizers import *
+from tensorflow.keras.layers.normalization import *
+from tensorflow.keras.optimizers import *
+from tensorflow.keras.constraints import *
+from tensorflow.keras.layers.noise import *
 
-from keras.models import Model
-from keras.layers import Input, Lambda, Conv2D, MaxPooling2D, BatchNormalization, ELU, Reshape, Concatenate, Activation
+import tensorflow as tf
+
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Input, Lambda, Conv2D, MaxPooling2D
+from tensorflow.keras.layers import BatchNormalization, ELU, Reshape, Concatenate, Activation
 
 from keras_layer_L2Normalization import L2Normalization
 
 mobilenet = True
 separable_filter = False
 conv_model = False
-tf = K.tf
+# tf = K.tf
 dropout_rate = 0.55
 W_regularizer = None
 init_ = 'glorot_uniform'
@@ -35,7 +38,7 @@ conv_has_bias = True #False for BN
 fc_has_bias = True
 
 #######################################################################
-#Separable filter 
+#Separable filter
 def separable_res_block1(input_layer, layer_name, nb_filter, nb_row, subsample=(1,1)):
     x = input_layer
     x_right = bn_conv_layer(x, layer_name + '_right', nb_filter, 1, nb_row, subsample)
@@ -46,7 +49,7 @@ def separable_res_block1(input_layer, layer_name, nb_filter, nb_row, subsample=(
 
 #######################################################################
 
-#Depthwise convolution 
+#Depthwise convolution
 
 def relu6(x):
     return K.relu(x, max_value=6)
@@ -180,7 +183,7 @@ class DepthwiseConv2D(Conv2D):
 
 def _depthwise_conv_block_classification(inputs, pointwise_conv_filters, alpha,
                           depth_multiplier=1, strides=(1, 1), block_id=1):
- 
+
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     pointwise_conv_filters = int(pointwise_conv_filters * alpha)
 
@@ -203,17 +206,17 @@ def _depthwise_conv_block_classification(inputs, pointwise_conv_filters, alpha,
 
 
 
-def _depthwise_conv_block_detection(input, layer_name, strides = (1,1), 
-                          kernel_size = 3,  
-                          pointwise_conv_filters=32, alpha=1.0, depth_multiplier=1, 
-                          padding = 'valid', 
-                          data_format = None, 
-                          activation = None, use_bias = True, 
-                          depthwise_initializer='glorot_uniform', 
-                          pointwise_initializer='glorot_uniform', bias_initializer = "zeros",  
-                          bias_regularizer= None, activity_regularizer = None, 
-                          depthwise_constraint = None, pointwise_constraint = None,  
-                          bias_constraint= None, batch_size = None, 
+def _depthwise_conv_block_detection(input, layer_name, strides = (1,1),
+                          kernel_size = 3,
+                          pointwise_conv_filters=32, alpha=1.0, depth_multiplier=1,
+                          padding = 'valid',
+                          data_format = None,
+                          activation = None, use_bias = True,
+                          depthwise_initializer='glorot_uniform',
+                          pointwise_initializer='glorot_uniform', bias_initializer = "zeros",
+                          bias_regularizer= None, activity_regularizer = None,
+                          depthwise_constraint = None, pointwise_constraint = None,
+                          bias_constraint= None, batch_size = None,
                           block_id=1,trainable = None, weights = None):
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
     pointwise_conv_filters = int(pointwise_conv_filters * alpha)
@@ -229,7 +232,7 @@ def _depthwise_conv_block_detection(input, layer_name, strides = (1,1),
 
     x = Conv2D(pointwise_conv_filters, (1, 1),
                #padding='same',
-               padding=padding, 
+               padding=padding,
                use_bias=False,
                strides=(1, 1),
                name=layer_name + '_conv_pw_%d' % block_id)(x)
@@ -323,7 +326,7 @@ def mn_model(image_size,
                 variances=[1.0, 1.0, 1.0, 1.0],
                 coords='centroids',
                 normalize_coords=False):
-   
+
     n_predictor_layers = 6 # The number of predictor conv layers in the network is 6 for the original SSD300
 
     # Get a few exceptions out of the way first
@@ -389,13 +392,13 @@ def mn_model(image_size,
         n_boxes_conv7_2 = n_boxes
         n_boxes_conv8_2 = n_boxes
         n_boxes_conv9_2 = n_boxes
-    
-  
+
+
     print ("Height, Width, Channels :", image_size[0], image_size[1], image_size[2])
        # Input image format
     img_height, img_width, img_channels = image_size[0], image_size[1], image_size[2]
 
-    input_shape = (img_height, img_width, img_channels) 
+    input_shape = (img_height, img_width, img_channels)
 
     img_input = Input(shape=input_shape)
 
@@ -430,100 +433,100 @@ def mn_model(image_size,
     x = _depthwise_conv_block_classification(x, 512, alpha, depth_multiplier, block_id=8)
     x = _depthwise_conv_block_classification(x, 512, alpha, depth_multiplier, block_id=9)
     x = _depthwise_conv_block_classification(x, 512, alpha, depth_multiplier, block_id=10)
-    conv4_3 = _depthwise_conv_block_classification(x, 512, alpha, depth_multiplier, block_id=11) #11 conv4_3 (300x300)-> 19x19 
+    conv4_3 = _depthwise_conv_block_classification(x, 512, alpha, depth_multiplier, block_id=11) #11 conv4_3 (300x300)-> 19x19
 
     x = _depthwise_conv_block_classification(conv4_3, 1024, alpha, depth_multiplier,
-                              strides=(2, 2), block_id=12)   # (300x300) -> 10x10 
+                              strides=(2, 2), block_id=12)   # (300x300) -> 10x10
     fc7 = _depthwise_conv_block_classification(x, 1024, alpha, depth_multiplier, block_id=13) # 13 fc7 (300x300) -> 10x10
 
 
     conv6_1 = bn_conv(fc7, 'detection_conv6_1', 256, 1, 1, subsample =(1,1), border_mode ='same', bias=conv_has_bias)
-    conv6_2 = _depthwise_conv_block_detection(input = conv6_1, layer_name='detection_conv6_2', strides=(2,2), 
-                                        pointwise_conv_filters=512, alpha=alpha, depth_multiplier=depth_multiplier, 
+    conv6_2 = _depthwise_conv_block_detection(input = conv6_1, layer_name='detection_conv6_2', strides=(2,2),
+                                        pointwise_conv_filters=512, alpha=alpha, depth_multiplier=depth_multiplier,
                                         padding = 'same', use_bias = True, block_id=1)
- 
+
     conv7_1 = bn_conv(conv6_2, 'detection_conv7_1', 128, 1, 1, subsample =(1,1), border_mode ='same', bias=conv_has_bias)
-    conv7_2 = _depthwise_conv_block_detection(input = conv7_1, layer_name='detection_conv7_2', strides=(2,2), 
-                                        pointwise_conv_filters=256, alpha=alpha, depth_multiplier=depth_multiplier, 
+    conv7_2 = _depthwise_conv_block_detection(input = conv7_1, layer_name='detection_conv7_2', strides=(2,2),
+                                        pointwise_conv_filters=256, alpha=alpha, depth_multiplier=depth_multiplier,
                                         padding = 'same', use_bias = True, block_id=2)
     #conv7_1 = Conv2D(128, (1, 1), activation='relu', padding='same', name='detection_conv7_1')(conv6_2)
     #conv7_2 = Conv2D(256, (3, 3), strides=(2, 2), activation='relu', padding='same', name='detection_conv7_2')(conv7_1)
 
     conv8_1 = bn_conv(conv7_2, 'detection_conv8_1', 128, 1, 1, subsample =(1,1), border_mode ='same', bias=conv_has_bias)
-    
-    conv8_2 = _depthwise_conv_block_detection(input = conv8_1, layer_name='detection_conv8_2', strides=(2,2), 
-                            pointwise_conv_filters=256, alpha=alpha, depth_multiplier=depth_multiplier, 
+
+    conv8_2 = _depthwise_conv_block_detection(input = conv8_1, layer_name='detection_conv8_2', strides=(2,2),
+                            pointwise_conv_filters=256, alpha=alpha, depth_multiplier=depth_multiplier,
                             padding = 'same', use_bias = True, block_id=3)
 
     # # conv8_2 = bn_conv(conv8_1, 'detection_conv8_2', 256, 2, 2, subsample =(1,1), border_mode ='same', bias=conv_has_bias)
-        
-    conv9_1 = bn_conv(conv8_2, 'detection_conv9_1', 64, 1, 1,  subsample =(1,1), border_mode ='same', bias=conv_has_bias)    
+
+    conv9_1 = bn_conv(conv8_2, 'detection_conv9_1', 64, 1, 1,  subsample =(1,1), border_mode ='same', bias=conv_has_bias)
     # conv9_2 = bn_conv(conv9_1, 'detection_conv9_2', 128, 3, 3, subsample =(2,2), border_mode ='same', bias=conv_has_bias)
 
-    conv9_2 = _depthwise_conv_block_detection(input = conv9_1, layer_name='detection_conv9_2', strides=(2,2), 
-                                    pointwise_conv_filters=256, alpha=alpha, depth_multiplier=depth_multiplier, 
+    conv9_2 = _depthwise_conv_block_detection(input = conv9_1, layer_name='detection_conv9_2', strides=(2,2),
+                                    pointwise_conv_filters=256, alpha=alpha, depth_multiplier=depth_multiplier,
                                     padding = 'same', use_bias = True, block_id=4)
 
 
     # Feed conv4_3 into the L2 normalization layer
     conv4_3_norm = L2Normalization(gamma_init=20, name='detection_conv4_3_norm')(conv4_3)
 
-    
-    conv4_3_norm_mbox_conf = _depthwise_conv_block_detection(input = conv4_3_norm, layer_name='detection_conv4_3_norm_mbox_conf', strides=(1,1), 
-                                    pointwise_conv_filters=n_boxes_conv4_3 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier, 
-                                    padding = 'same', use_bias = True, block_id=1)
-        
 
-    fc7_mbox_conf = _depthwise_conv_block_detection(input = fc7, layer_name='detection_fc7_mbox_conf', strides=(1,1), 
-                                    pointwise_conv_filters=n_boxes_fc7 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier, 
+    conv4_3_norm_mbox_conf = _depthwise_conv_block_detection(input = conv4_3_norm, layer_name='detection_conv4_3_norm_mbox_conf', strides=(1,1),
+                                    pointwise_conv_filters=n_boxes_conv4_3 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier,
+                                    padding = 'same', use_bias = True, block_id=1)
+
+
+    fc7_mbox_conf = _depthwise_conv_block_detection(input = fc7, layer_name='detection_fc7_mbox_conf', strides=(1,1),
+                                    pointwise_conv_filters=n_boxes_fc7 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier,
                                     padding = 'same', use_bias = True, block_id=2)
-    conv6_2_mbox_conf = _depthwise_conv_block_detection(input = conv6_2, layer_name='detection_conv6_2_mbox_conf', strides=(1,1), 
-                                    pointwise_conv_filters=n_boxes_conv6_2 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier, 
+    conv6_2_mbox_conf = _depthwise_conv_block_detection(input = conv6_2, layer_name='detection_conv6_2_mbox_conf', strides=(1,1),
+                                    pointwise_conv_filters=n_boxes_conv6_2 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier,
                                     padding = 'same', use_bias = True, block_id=3)
 
-    conv7_2_mbox_conf = _depthwise_conv_block_detection(input = conv7_2, layer_name='detection_conv7_2_mbox_conf', strides=(1,1), 
-                                    pointwise_conv_filters=n_boxes_conv7_2 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier, 
+    conv7_2_mbox_conf = _depthwise_conv_block_detection(input = conv7_2, layer_name='detection_conv7_2_mbox_conf', strides=(1,1),
+                                    pointwise_conv_filters=n_boxes_conv7_2 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier,
                                     padding = 'same', use_bias = True, block_id=4)
-    
-    conv8_2_mbox_conf = _depthwise_conv_block_detection(input = conv8_2, layer_name='detection_conv8_2_mbox_conf', strides=(1,1), 
-                                    pointwise_conv_filters=n_boxes_conv8_2 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier, 
+
+    conv8_2_mbox_conf = _depthwise_conv_block_detection(input = conv8_2, layer_name='detection_conv8_2_mbox_conf', strides=(1,1),
+                                    pointwise_conv_filters=n_boxes_conv8_2 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier,
                                     padding = 'same', use_bias = True, block_id=5)
-    conv9_2_mbox_conf = _depthwise_conv_block_detection(input = conv9_2, layer_name='detection_conv9_2_mbox_conf', strides=(1,1), 
-                                    pointwise_conv_filters=n_boxes_conv9_2 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier, 
+    conv9_2_mbox_conf = _depthwise_conv_block_detection(input = conv9_2, layer_name='detection_conv9_2_mbox_conf', strides=(1,1),
+                                    pointwise_conv_filters=n_boxes_conv9_2 * n_classes, alpha=alpha, depth_multiplier=depth_multiplier,
                                     padding = 'same', use_bias = True, block_id=6)
-    
+
     # We predict 4 box coordinates for each box, hence the localization predictors have depth `n_boxes * 4`
     # Output shape of the localization layers: `(batch, height, width, n_boxes * 4)`
 
-    conv4_3_norm_mbox_loc = _depthwise_conv_block_detection(input = conv4_3_norm, layer_name='detection_conv4_3_norm_mbox_loc', strides=(1,1), 
-                                    pointwise_conv_filters=n_boxes_conv4_3 * 4, alpha=alpha, depth_multiplier=depth_multiplier, 
-                                    padding = 'same', use_bias = True, block_id=1) 
-    
-    fc7_mbox_loc = _depthwise_conv_block_detection(input = fc7, layer_name='detection_fc7_mbox_loc', strides=(1,1), 
-                                pointwise_conv_filters=n_boxes_fc7 * 4, alpha=alpha, depth_multiplier=depth_multiplier, 
-                                padding = 'same', use_bias = True, block_id=2)
-        
+    conv4_3_norm_mbox_loc = _depthwise_conv_block_detection(input = conv4_3_norm, layer_name='detection_conv4_3_norm_mbox_loc', strides=(1,1),
+                                    pointwise_conv_filters=n_boxes_conv4_3 * 4, alpha=alpha, depth_multiplier=depth_multiplier,
+                                    padding = 'same', use_bias = True, block_id=1)
 
-    conv6_2_mbox_loc = _depthwise_conv_block_detection(input = conv6_2, layer_name='detection_conv6_2_mbox_loc', strides=(1,1), 
-                                pointwise_conv_filters=n_boxes_conv6_2 * 4, alpha=alpha, depth_multiplier=depth_multiplier, 
+    fc7_mbox_loc = _depthwise_conv_block_detection(input = fc7, layer_name='detection_fc7_mbox_loc', strides=(1,1),
+                                pointwise_conv_filters=n_boxes_fc7 * 4, alpha=alpha, depth_multiplier=depth_multiplier,
+                                padding = 'same', use_bias = True, block_id=2)
+
+
+    conv6_2_mbox_loc = _depthwise_conv_block_detection(input = conv6_2, layer_name='detection_conv6_2_mbox_loc', strides=(1,1),
+                                pointwise_conv_filters=n_boxes_conv6_2 * 4, alpha=alpha, depth_multiplier=depth_multiplier,
                                 padding = 'same', use_bias = True, block_id=3)
 
-    conv7_2_mbox_loc = _depthwise_conv_block_detection(input = conv7_2, layer_name='detection_conv7_2_mbox_loc', strides=(1,1), 
-                                pointwise_conv_filters=n_boxes_conv7_2 * 4, alpha=alpha, depth_multiplier=depth_multiplier, 
+    conv7_2_mbox_loc = _depthwise_conv_block_detection(input = conv7_2, layer_name='detection_conv7_2_mbox_loc', strides=(1,1),
+                                pointwise_conv_filters=n_boxes_conv7_2 * 4, alpha=alpha, depth_multiplier=depth_multiplier,
                                 padding = 'same', use_bias = True, block_id=4)
 
-    conv8_2_mbox_loc = _depthwise_conv_block_detection(input = conv8_2, layer_name='detection_conv8_2_mbox_loc', strides=(1,1), 
-                                pointwise_conv_filters=n_boxes_conv8_2 * 4, alpha=alpha, depth_multiplier=depth_multiplier, 
+    conv8_2_mbox_loc = _depthwise_conv_block_detection(input = conv8_2, layer_name='detection_conv8_2_mbox_loc', strides=(1,1),
+                                pointwise_conv_filters=n_boxes_conv8_2 * 4, alpha=alpha, depth_multiplier=depth_multiplier,
                                 padding = 'same', use_bias = True, block_id=5)
-    
-    conv9_2_mbox_loc = _depthwise_conv_block_detection(input = conv9_2, layer_name='detection_conv9_2_mbox_loc', strides=(1,1), 
-                                pointwise_conv_filters=n_boxes_conv9_2 * 4, alpha=alpha, depth_multiplier=depth_multiplier, 
+
+    conv9_2_mbox_loc = _depthwise_conv_block_detection(input = conv9_2, layer_name='detection_conv9_2_mbox_loc', strides=(1,1),
+                                pointwise_conv_filters=n_boxes_conv9_2 * 4, alpha=alpha, depth_multiplier=depth_multiplier,
                                 padding = 'same', use_bias = True, block_id=5)
-    ### Generate the anchor boxes 
+    ### Generate the anchor boxes
 
     # Output shape of anchors: `(batch, height, width, n_boxes, 8)`
 
-  
+
     conv4_3_norm_mbox_priorbox = AnchorBoxes(img_height, img_width, this_scale=scales[0], next_scale=scales[1], aspect_ratios=aspect_ratios_conv4_3,
                                              two_boxes_for_ar1=two_boxes_for_ar1, limit_boxes=limit_boxes, variances=variances, coords=coords, normalize_coords=normalize_coords, name='detection_conv4_3_norm_mbox_priorbox')(conv4_3_norm)
     fc7_mbox_priorbox = AnchorBoxes(img_height, img_width, this_scale=scales[1], next_scale=scales[2], aspect_ratios=aspect_ratios_fc7,
@@ -603,13 +606,13 @@ def mn_model(image_size,
     #model = Model(inputs=img_input, outputs=predictions)
 
 
- 
+
     # Get the spatial dimensions (height, width) of the predictor conv layers, we need them to
     # be able to generate the default boxes for the matching process outside of the model during training.
     # Note that the original implementation performs anchor box matching inside the loss function. We don't do that.
     # Instead, we'll do it in the batch generator function.
     # The spatial dimensions are the same for the confidence and localization predictors, so we just take those of the conf layers.
-    
+
     predictor_sizes = np.array([conv4_3_norm_mbox_conf._keras_shape[1:3],
                                  fc7_mbox_conf._keras_shape[1:3],
                                  conv6_2_mbox_conf._keras_shape[1:3],
@@ -628,4 +631,3 @@ def mn_model(image_size,
     # predictor_sizes = 0
 
     return model, model_layer, img_input, predictor_sizes
-
