@@ -24,7 +24,7 @@ import sys
 import numpy as np
 import cv2
 import random
-from sklearn.utils import shuffle 
+from sklearn.utils import shuffle
 from copy import deepcopy
 from PIL import Image
 import csv
@@ -35,17 +35,18 @@ from keras.applications.imagenet_utils import preprocess_input
 from keras import backend as K
 import os
 from keras.preprocessing import image
-import matplotlib as mpl 
+import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib import pyplot as plt
 
 from termcolor import colored
-#from matplotlib import pyplot as plt 
+#from matplotlib import pyplot as plt
 from tqdm import tqdm
 #from __future__ import print_function
 
 
-from scipy.misc import imresize
+# from scipy.misc import imresize
+from skimage.transform import resize as imresize
 
 resize_fct = imresize
 
@@ -53,13 +54,13 @@ bb_expanded = False
 
 
 def save_bb(path, filename, results, prediction=True):
-  
+
   # print filename
-  _SIZ = 300 
+  _SIZ = 300
   # img = image.load_img(filename, target_size=(224, 224))
   img = image.load_img(filename)
-  
-  img_height = img.height 
+
+  img_height = img.height
   img_width = img.width
 
   img = image.img_to_array(img)
@@ -92,9 +93,9 @@ def save_bb(path, filename, results, prediction=True):
       det_xmax = result[2] * img_width / _SIZ
       det_ymin = result[3] * img_height / _SIZ
       det_ymax = result[4] * img_height / _SIZ
-    
 
-    
+
+
     xmin = int(det_xmin)
     ymin = int(det_ymin)
     xmax = int(det_xmax)
@@ -102,9 +103,9 @@ def save_bb(path, filename, results, prediction=True):
 
     if(prediction):
       score = det_conf
-    
+
     plt.imshow(img / 255.)
-    
+
     label = int(int(det_label))
 
     #print label
@@ -113,7 +114,7 @@ def save_bb(path, filename, results, prediction=True):
 
     label_name = "face"
     # label_name = class_names[label]
-    # print label_name 
+    # print label_name
     # print label
 
     if(prediction):
@@ -121,10 +122,10 @@ def save_bb(path, filename, results, prediction=True):
     else:
       display_txt = '{}'.format(label_name)
 
-      
+
     # print (xmin, ymin, ymin, ymax)
     coords = (xmin, ymin), (xmax-xmin), (ymax-ymin)
-    color_code = color_code-1 
+    color_code = color_code-1
     color = colors[0]
     currentAxis.add_patch(plt.Rectangle(*coords, fill=False, edgecolor=color, linewidth=1))
     # currentAxis.text(xmin, ymin, display_txt, bbox={'facecolor':color, 'alpha':0.5})
@@ -134,7 +135,7 @@ def save_bb(path, filename, results, prediction=True):
   print ('saved' , path + filename)
 
   plt.clf()
-  
+
 
 def classify(img_path):
     img_ = io.imread(img_path)
@@ -144,7 +145,7 @@ def classify(img_path):
     if(img_.shape[-1]==4):
         img_ = img_[:,:,0:3]
     img_ = resize_fct(img_,tuple(input_shape[0:2]))[:,:,::-1] - 128. #BGR - 128.
-    img_ = np.expand_dims(img_,0) 
+    img_ = np.expand_dims(img_,0)
 
     prediction_ = sess.run('Sigmoid:0', feed_dict={'input_1:0': img_})
     return prediction_, img_
@@ -459,7 +460,7 @@ class BatchGenerator:
             data = np.load(annotations_path).item()
 
             n_train_samples = len(data)
-            train_cnt =0 
+            train_cnt =0
             for key in data:
                 train_cnt = train_cnt + 1
                 sys.stdout.flush()
@@ -467,14 +468,14 @@ class BatchGenerator:
                 img_path = image_set_path
                 img_name = data[key][1]
                 image_id = key
-                
+
                 folder = None
-                filename = img_path + img_name 
-                
+                filename = img_path + img_name
+
                 #print  (filename)
 
                 boxes = [] # We'll store all boxes for this image here
-                
+
                 n_objects = len(data[key]) - 3
                 #print filename
                 img_test = cv2.imread(filename)
@@ -482,7 +483,7 @@ class BatchGenerator:
                 if(img_test is None):
                     continue
 
-                
+
 
                 height, width, channels = img_test.shape
                 #print height, width, channels
@@ -505,22 +506,22 @@ class BatchGenerator:
                     ymax = data[key][3+obj][0][3]
 
                     bb_width =(xmax - xmin) * float(512)/width
-                    bb_height =(ymax - ymin) * float(512)/height 
+                    bb_height =(ymax - ymin) * float(512)/height
 
-                    if(bb_width > 8 and bb_height > 8): 
+                    if(bb_width > 8 and bb_height > 8):
                         num_valid_objects +=1
-                        # the image size after resizing will be too small for training 
+                        # the image size after resizing will be too small for training
 
                         # print filename
                         # print xmin, xmax, ymin, ymax
 
-                        # extract bounding box and increase the size 
+                        # extract bounding box and increase the size
                         # xmin = max(data[key][3+obj][0][0] , 0) * (width-1)
-                        # xmax = min(data[key][3+obj][0][1] , 1.0) * (width-1) 
-                        # ymin = max(data[key][3+obj][0][2] , 0) * (height-1) 
-                        # ymax = min(data[key][3+obj][0][3] , 1.0) * (height-1)  
+                        # xmax = min(data[key][3+obj][0][1] , 1.0) * (width-1)
+                        # ymin = max(data[key][3+obj][0][2] , 0) * (height-1)
+                        # ymax = min(data[key][3+obj][0][3] , 1.0) * (height-1)
 
-                        
+
                         item_dict = {'folder': folder,
                                      'image_name': filename,
                                      'image_id': image_id,
@@ -533,20 +534,20 @@ class BatchGenerator:
                                      'ymin': ymin,
                                      'xmax': xmax,
                                      'ymax': ymax}
-                          
-                        #if(class_name == "text"):             
+
+                        #if(class_name == "text"):
                         #    print class_name, class_id, filename
-                            
-                        #    cv2.rectangle(img_test, (xmin,ymin), (xmax, ymax), (255,0,0))           
-                
-                       
+
+                        #    cv2.rectangle(img_test, (xmin,ymin), (xmax, ymax), (255,0,0))
+
+
                         box = []
                         for item in self.box_output_format:
                             box.append(item_dict[item])
                         boxes.append(box)
-                
-                if(num_valid_objects > 0):        
-                    self.filenames.append(filename)                   
+
+                if(num_valid_objects > 0):
+                    self.filenames.append(filename)
                     self.labels.append(boxes)
 
                 #if(class_name == "text"):
@@ -556,7 +557,7 @@ class BatchGenerator:
                 return self.filenames, self.labels
 
 
-    #@threadsafe_generator        
+    #@threadsafe_generator
     def generate(self,
                  batch_size=32,
                  train=True,
@@ -669,7 +670,7 @@ class BatchGenerator:
         ymin = self.box_output_format.index('ymin')
         ymax = self.box_output_format.index('ymax')
 
-        resize_function = "scipy"
+        resize_function = "pil"
         resize_select =1
 
         while True:
@@ -684,14 +685,14 @@ class BatchGenerator:
             for filename in self.filenames[current:current+batch_size]:
 
                 #print os.path.join(self.images_path, filename)
-                
+
                 img = cv2.imread(filename)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
                 batch_X.append(img)
 
                 #img_width = resize[0]
                 #img_height = resize[1]
-                #print img_width, img_height     
+                #print img_width, img_height
 
 
                 #img = Image.load_img(os.path.join(self.images_path, filename), target_size=(img_width, img_height))
@@ -699,12 +700,12 @@ class BatchGenerator:
                 #batch_X.append(np.array(img_opencv))
 
                 #with Image.open('{}'.format(os.path.join(self.images_path, filename)), target_size = (img_height, img_width)) as img:
-                    # convert the image to 
+                    # convert the image to
                 #    img_opencv = cv2.cvtColor(numpy.array(img), cv2.COLOR_RGB2BGR)
                 #    batch_X.append(np.array(img))
 
                     #print np.array(img).shape
-                    #print np.array(batch_X).shape   
+                    #print np.array(batch_X).shape
 
 
             batch_y = deepcopy(self.labels[current:current+batch_size])
@@ -735,9 +736,9 @@ class BatchGenerator:
 
                 #print "filename :", this_filenames[i]
                 #print "annotations :", batch_y[i]
-                
 
-                #print "batch_y[i][:,(xmin,xmax)]", batch_y[i][:,(xmin,xmax)]    
+
+                #print "batch_y[i][:,(xmin,xmax)]", batch_y[i][:,(xmin,xmax)]
                 if equalize:
                     batch_X[i] = histogram_eq(batch_X[i])
 
@@ -821,7 +822,7 @@ class BatchGenerator:
 
                 if random_crop:
 
-                    #random crop to be done only for 30% time 
+                    #random crop to be done only for 30% time
                     p = np.random.uniform(0,1)
 
                     if(p < 0.3):
@@ -975,8 +976,8 @@ class BatchGenerator:
                         if include_thresh == 0: batch_y[i] = batch_y[i][after_area > include_thresh * before_area] # If `include_thresh == 0`, we want to make sure that boxes with area 0 get thrown out, hence the ">" sign instead of the ">=" sign
                         else: batch_y[i] = batch_y[i][after_area >= include_thresh * before_area] # Especially for the case `include_thresh == 1` we want the ">=" sign, otherwise no boxes would be left at all
 
-                        
-                
+
+
                 if resize:
                     #print "coming here"
                     #print "before"
@@ -985,15 +986,15 @@ class BatchGenerator:
                     #print "===>resize:enabled"
 
                     #print (batch_y[i][:,[xmin,xmax]], batch_y[i][:,[ymin,ymax]])
-                    
-                    # resize using scipy function 
 
-                    # use different types of scaling for images to improve the performance with different preprocessors 
+                    # resize using scipy function
+
+                    # use different types of scaling for images to improve the performance with different preprocessors
 
 
 
                     if(resize_function == "scipy"):
-                        batch_X[i] = sm.imresize(batch_X[i], resize)
+                        batch_X[i] = imresize(batch_X[i], resize)
                         #print "scipy resizing is used"
                     elif (resize_function == "pil"):
                         img_pil = Image.fromarray(batch_X[i])
@@ -1015,20 +1016,20 @@ class BatchGenerator:
                         else:
                             #resize_function = "scipy"
                             #print "---scipy---"
-                            batch_X[i] = sm.imresize(batch_X[i], resize)
+                            batch_X[i] = imresize(batch_X[i], resize)
                     else:
-                        batch_X[i] = sm.imresize(batch_X[i], resize)                  
+                        batch_X[i] = imresize(batch_X[i], resize)
                         #print "---scipy---"
                     resize_select = resize_select +1
 
                     if(resize_select %6 ==0):
                             resize_select = 1
 
-                       
+
                     #batch_X[i] = cv2.resize_fct(batch_X[i], dsize=resize, interpolation= cv2.INTER_LINEAR);
                     #kernel = np.ones((3,3), np.float32)/9
                     #dst = cv2.filter2D(batch_X[i], -1, kernel)
-                    #batch_X[i] = dst; 
+                    #batch_X[i] = dst;
 
                     # print (this_filenames[i])
 
@@ -1043,9 +1044,9 @@ class BatchGenerator:
 
                     batch_y[i][:,[xmin,xmax]] = (batch_y[i][:,[xmin,xmax]] * (float(resize[0]) / img_width)).astype(np.int)
                     batch_y[i][:,[ymin,ymax]] = (batch_y[i][:,[ymin,ymax]] * (float(resize[1]) / img_height)).astype(np.int)
-                    
 
-                    # results = batch_y[i] 
+
+                    # results = batch_y[i]
 
                     # for result in results:
                     #     i_xmin = result[1]
@@ -1062,7 +1063,7 @@ class BatchGenerator:
                     # print (batch_y[i])
 
                     #print batch_y[i][:,[ymin,ymax]]
-                    #print "after"  
+                    #print "after"
                     img_width, img_height = resize # Updating these at this point is unnecessary, but it's one fewer source of error if this method gets expanded in the future
 
                 if gray:
@@ -1100,7 +1101,7 @@ class BatchGenerator:
             else:
                 yield ((np.array(batch_X)), batch_y, this_filenames)
 
- 
+
 
 
     def get_filenames_labels(self):
@@ -1331,8 +1332,3 @@ class BatchGenerator:
             return np.array(processed_images), np.array(original_images), np.array(targets_for_csv), processed_labels
         else:
             print("Image processing completed.")
-
-
-
-
-
